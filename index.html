@@ -3,19 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TraderScheme Custom Platform Hub</title>
+    <title>Vaggertrade Engine Premium Hub</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: #0b0c10; color: #fff; padding: 15px; }
         .header { display: flex; justify-content: space-between; align-items: center; background: #1f2833; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #45f3ff; }
-        .logo { font-weight: bold; font-size: 20px; color: #45f3ff; }
+        .logo { font-weight: bold; font-size: 20px; color: #45f3ff; letter-spacing: 1px; }
         .status-container { display: flex; align-items: center; gap: 8px; }
         .dot { width: 10px; height: 10px; border-radius: 50%; background: #ff4444; }
         
         .grid-container { display: grid; grid-template-columns: 1fr; gap: 15px; }
         @media(min-width: 768px) { .grid-container { grid-template-columns: 1fr 1fr; } }
         
-        .card { background: #161a22; padding: 20px; border-radius: 8px; border: 1px solid #242936; }
+        .card { background: #161a22; padding: 20px; border-radius: 8px; border: 1px solid #242936; margin-bottom: 15px; }
         .card h3 { margin-bottom: 15px; color: #c5a880; font-size: 16px; letter-spacing: 0.5px; }
         
         .metric-row { display: flex; justify-content: space-between; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #242936; }
@@ -30,13 +30,20 @@
         .btn-start { background: linear-gradient(135deg, #00ff88, #00b359); color: #000; }
         .btn-stop { background: #ff4444; color: #fff; }
         
-        .console { background: #000; font-family: 'Courier New', Courier, monospace; font-size: 12px; color: #00ff88; padding: 15px; border-radius: 6px; height: 200px; overflow-y: auto; white-space: pre-line; border: 1px solid #242936; }
+        .console { background: #000; font-family: 'Courier New', Courier, monospace; font-size: 12px; color: #00ff88; padding: 15px; border-radius: 6px; height: 180px; overflow-y: auto; white-space: pre-line; border: 1px solid #242936; margin-bottom: 15px; }
+        
+        .history-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; text-align: left; }
+        .history-table th { background: #1f2833; color: #45f3ff; padding: 10px; border: 1px solid #242936; }
+        .history-table td { padding: 8px 10px; border: 1px solid #242936; background: #0b0c10; }
+        .win-row { color: #00ff88; }
+        .loss-row { color: #ff4444; }
     </style>
 </head>
 <body>
 
+    <!-- 🟢 Updated Header Label to Vaggertrade Engine -->
     <div class="header">
-        <div class="logo">TRADERSCHEME ENGINE</div>
+        <div class="logo">VAGGERTRADE ENGINE</div>
         <div class="status-container">
             <div id="statusDot" class="dot"></div>
             <span id="statusText" style="color: #8b949e; font-size: 14px;">Offline</span>
@@ -49,20 +56,20 @@
             <div class="form-group">
                 <label>Target Execution Engine</label>
                 <select id="strategyDropdown">
-                    <option value="Martingale">AEX AI Scalper (Martingale Loop)</option>
+                    <option value="Martingale">Vaggertrade AI Scalper (Martingale Loop)</option>
                     <option value="Flat">Quantum Core (Fixed Risk Mode)</option>
                 </select>
             </div>
             <div class="form-group">
-                <label>Initial Stake Amount (\$)</label>
+                <label>Initial Stake Amount ($)</label>
                 <input type="number" id="initialStake" value="2">
             </div>
             <div class="form-group">
-                <label>Maximum Stake Risk Cap (\$)</label>
+                <label>Maximum Stake Risk Cap ($)</label>
                 <input type="number" id="maxStake" value="5000">
             </div>
             <div class="form-group">
-                <label>Take Profit Target (\$)</label>
+                <label>Take Profit Target ($)</label>
                 <input type="number" id="takeProfit" value="10">
             </div>
             
@@ -74,19 +81,41 @@
             <h3>LIVE SYSTEM METRICS</h3>
             <div class="metric-row">
                 <span>Account Balance:</span>
-                <span id="balance" class="metric-value" style="color: #fff;">\$20,375.81</span>
+                <span id="balance" class="metric-value" style="color: #fff;">$20,375.81</span>
             </div>
             <div class="metric-row">
                 <span>Active Working Stake:</span>
-                <span id="stake" class="metric-value" style="color: #45f3ff;">\$0.00</span>
+                <span id="stake" class="metric-value" style="color: #45f3ff;">$0.00</span>
             </div>
             <div class="metric-row">
                 <span>Net Profit / Loss Session:</span>
-                <span id="profit" class="metric-value">\$0.00</span>
+                <span id="profit" class="metric-value">$0.00</span>
             </div>
             
             <h3>LIVE STREAM ACTIVITY LOG</h3>
             <div id="log" class="console">Waiting for engine validation parameters...</div>
+        </div>
+    </div>
+
+    <div class="card" style="width: 100%;">
+        <h3>TRANSACTION HISTORY LEDGER</h3>
+        <div style="max-height: 200px; overflow-y: auto;">
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>Time Index</th>
+                        <th>Strategy Mode</th>
+                        <th>Target Venture Risk</th>
+                        <th>Contract Verdict</th>
+                        <th>Running Balance</th>
+                    </tr>
+                </thead>
+                <tbody id="historyBody">
+                    <tr>
+                        <td colspan="5" style="text-align: center; color: #8b949e;">No transaction entries logged yet.</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     </div>
 
@@ -100,6 +129,39 @@
         let takeProfitSetting = 10;
         let totalProfit = 0.00;
         let baseBalance = 20375.81;
+        let transactionCount = 0;
+
+        function playChime(isWin) {
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContext) return;
+                const ctx = new AudioContext();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                
+                if (isWin) {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(880, ctx.currentTime);
+                    osc.frequency.setValueAtTime(1320, ctx.currentTime + 0.1);
+                    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+                    osc.start(ctx.currentTime);
+                    osc.stop(ctx.currentTime + 0.3);
+                } else {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(220, ctx.currentTime);
+                    gain.gain.setValueAtTime(0.2, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
+                    osc.start(ctx.currentTime);
+                    osc.stop(ctx.currentTime + 0.2);
+                }
+            } catch (e) {
+                console.log("Audio feedback matrix blocked.");
+            }
+        }
 
         function updateLog(message) {
             const logBox = document.getElementById('log');
@@ -107,6 +169,27 @@
                 logBox.innerText += "\n" + message;
                 logBox.scrollTop = logBox.scrollHeight;
             }
+        }
+
+        function addRowToLedger(strategy, stakeAmount, verdict, isWin) {
+            const body = document.getElementById('historyBody');
+            if (transactionCount === 0) body.innerHTML = "";
+            
+            transactionCount++;
+            const now = new Date();
+            const timeString = now.toTimeString().split(' ')[0];
+            const currentBal = baseBalance + totalProfit;
+            
+            const rowHTML = `
+                <tr class="${isWin ? 'win-row' : 'loss-row'}">
+                    <td>${timeString}</td>
+                    <td>${strategy}</td>
+                    <td>$${stakeAmount.toFixed(2)}</td>
+                    <td>${verdict}</td>
+                    <td style="color: white;">$${currentBal.toFixed(2)}</td>
+                </tr>
+            `;
+            body.innerHTML = rowHTML + body.innerHTML;
         }
 
         function updateUI() {
@@ -126,85 +209,9 @@
         function handleContractResult(isWin) {
             const strategyMode = document.getElementById('strategyDropdown').value;
             const payoutFactor = 0.95;
+            const oldStake = currentStake;
+
+            playChime(isWin);
 
             if (isWin) {
-                const winAmount = currentStake * payoutFactor;
-                totalProfit += winAmount;
-                updateLog(`🎉 [WIN] Sequence matched. Return: +$${winAmount.toFixed(2)}`);
-                currentStake = initialStakeSetting;
-            } else {
-                totalProfit -= currentStake;
-                updateLog(`❌ [LOSS] Sequence missed. Deficit: -$${currentStake.toFixed(2)}`);
-                
-                if (strategyMode === 'Martingale') {
-                    const doubleStake = currentStake * 2;
-                    if (doubleStake <= maxStakeSetting) {
-                        currentStake = doubleStake;
-                        updateLog(`🔄 Martingale: Doubling allocation to $${currentStake.toFixed(2)}`);
-                    } else {
-                        updateLog(`⚠️ Max risk parameters reached. Safety reset executed.`);
-                        currentStake = initialStakeSetting;
-                    }
-                } else {
-                    currentStake = initialStakeSetting;
-                }
-            }
-            updateUI();
-
-            if (totalProfit >= takeProfitSetting) {
-                updateLog(`🏁 [TARGET MET] Take profit boundary reached. Bot loop stopped.`);
-                stopBot();
-            }
-        }
-
-        function simulateTickEngine() {
-            if (!isRunning) return;
-            // Generates a fully accurate synthetic volatility tick matching broker environments
-            const basePrice = 1245.50;
-            const fluctuation = (Math.random() * 2) - 1;
-            const quote = (basePrice + fluctuation).toFixed(2);
-            const lastDigit = Number(quote.slice(-1));
-
-            updateLog(`Index Feed: ${quote} | Last Digit: [ ${lastDigit} ]`);
-
-            if (lastDigit % 2 === 0) {
-                updateLog(`🎯 [PATTERN MATCH] Digit is EVEN -> Deploying 1-Tick contract block...`);
-                setTimeout(() => {
-                    if (!isRunning) return;
-                    const outcomeSeed = Math.floor(Math.random() * 10);
-                    handleContractResult(outcomeSeed % 2 === 0);
-                }, 800);
-            }
-        }
-
-        function startBot() {
-            if (isRunning) return;
-            
-            initialStakeSetting = Number(document.getElementById('initialStake').value || 2);
-            maxStakeSetting = Number(document.getElementById('maxStake').value || 5000);
-            takeProfitSetting = Number(document.getElementById('takeProfit').value || 10);
-            
-            currentStake = initialStakeSetting;
-            isRunning = true;
-            updateUI();
-
-            document.getElementById('log').innerText = "🤖 Launching engine algorithms...";
-            document.getElementById('statusText').innerText = "Online";
-            document.getElementById('statusDot').style.background = "#00ff88";
-
-            // Fallback Engine: Triggers if public websocket endpoints encounter network or browser barriers
-            updateLog("🔄 Local Sandbox Engine Engaged. Processing ticks...");
-            simInterval = setInterval(simulateTickEngine, 1500);
-        }
-
-        function stopBot() {
-            isRunning = false;
-            clearInterval(simInterval);
-            if (ws) ws.close();
-            document.getElementById('statusText').innerText = "Offline";
-            document.getElementById('statusDot').style.background = "#ff4444";
-            updateLog("🛑 Bot stopped. Interface idle.");
-        }
-    </script>
-</body>
-</html>
+        
