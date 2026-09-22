@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Apex Bot | Deriv Trading Dashboard</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div>
+        <h1>Apex Bot</h1>
+        <p>Automated Deriv Trading Dashboard</p>
+      </div>
+      <div class="status">
+        <span id="statusDot" class="dot offline"></span>
+        <span id="statusText">Offline</span>
+      </div>
+    </header>
+
+    <section class="cards">
+      <article class="card">
+        <span>Balance</span>
+        <strong id="balance">$0.00</strong>
+      </article>
+      <article class="card">
+        <span>Current Stake</span>
+        <strong id="stake">$1.00</strong>
+      </article>
+      <article class="card">
+        <span>Profit / Loss</span>
+        <strong id="profit">$0.00</strong>
+      </article>
+      <article class="card">
+        <span>Active Trade</span>
+        <strong id="activeTrade">None</strong>
+      </article>
+    </section>
+
+    <section class="panel">
+      <h2>Bot Controls</h2>
+
+      <div class="form-grid">
+        <label>
+          Initial Stake
+          <input id="initialStake" type="number" min="0.35" step="0.01" value="1">
+        </label>
+
+        <label>
+          Maximum Stake
+          <input id="maxStake" type="number" min="0.35" step="0.01" value="32">
+        </label>
+
+        <label>
+          Take Profit
+          <input id="takeProfit" type="number" min="0" step="0.01" value="100">
+        </label>
+      </div>
+
+      <div class="actions">
+        <button id="startBtn" class="btn primary">Start Bot</button>
+        <button id="stopBtn" class="btn danger" disabled>Stop Bot</button>
+      </div>
+
+      <p class="strategy">
+        Strategy: even last digit → Rise (CALL), 1 tick.
+        Martingale: loss doubles the next stake; win resets to the initial stake.
+      </p>
+    </section>
+
+    <section class="panel">
+      <div class="panel-heading">
+        <h2>Live Activity</h2>
+        <button id="clearLog" class="small-btn">Clear</button>
+      </div>
+      <pre id="log" class="log">Waiting for bot connection...</pre>
+    </section>
+
+    <footer>
+      <p>Trading involves financial risk. Test on a demo account before using real funds.</p>
+    </footer>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
