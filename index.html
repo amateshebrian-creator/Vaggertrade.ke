@@ -1,189 +1,212 @@
-
-                'use strict';
-
-let ws;
-let isRunning = false;
-let digitHistory = [];
-let requestId = 1;
-
-// Metrics tracking variables for simulation counters
-let simWins = 0;
-let simLosses = 0;
-let simTotalProfit = 0.00;
-
-// Grab UI Elements from index.html
-const startBtn = document.getElementById('startBtn');
-const stopBtn = document.getElementById('stopBtn');
-const logBox = document.getElementById('log');
-const balanceDisplay = document.getElementById('balance');
-const stakeDisplay = document.getElementById('stake');
-const profitDisplay = document.getElementById('profit');
-const statusText = document.getElementById('statusText');
-const statusDot = document.getElementById('statusDot');
-
-// Grab Dynamic Risk Settings from UI Input Fields
-const getInitialStake = () => Number(document.getElementById('initialStake')?.value || 1);
-const getMaxStake = () => Number(document.getElementById('maxStake')?.value || 50);
-const getTakeProfit = () => Number(document.getElementById('takeProfit')?.value || 10);
-
-let currentStake = getInitialStake();
-
-function nextRequestId() {
-    return requestId++;
-}
-
-function updateLog(message) {
-    if (logBox) {
-        logBox.innerText += "\n" + message;
-        logBox.scrollTop = logBox.scrollHeight; // Auto-scrolls panel container down
-    }
-}
-
-// Emulates your contract settlement framework inside a browser engine
-function simulateContractSettlement(wasEven, lastDigit) {
-    const isWin = wasEven && (lastDigit % 2 === 0);
-    const payoutMultiplier = 0.95; // Standard 95% return factor on Rise/Fall binary options
-    
-    if (isWin) {
-        const winAmount = currentStake * payoutMultiplier;
-        simWins++;
-        simTotalProfit += winAmount;
-        updateLog(`🎉 [CONTRACT WON] Last digit [${lastDigit}] remained EVEN. Profit: +$${winAmount.toFixed(2)}`);
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vaggertrade Engine Premium Hub</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #0b0c10; color: #fff; padding: 15px; }
+        .header { display: flex; justify-content: space-between; align-items: center; background: #1f2833; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #45f3ff; }
+        .logo { font-weight: bold; font-size: 20px; color: #45f3ff; letter-spacing: 1px; }
+        .status-container { display: flex; align-items: center; gap: 8px; }
+        .dot { width: 10px; height: 10px; border-radius: 50%; background: #ff4444; }
         
-        // Reset stake target to baseline value matching Martingale configuration profiles
-        currentStake = getInitialStake();
-    } else {
-        simLosses++;
-        simTotalProfit -= currentStake;
-        updateLog(`❌ [CONTRACT LOST] Last digit [${lastDigit}] switched to ODD. Loss: -$${currentStake.toFixed(2)}`);
+        .grid-container { display: grid; grid-template-columns: 1fr; gap: 15px; }
+        @media(min-width: 768px) { .grid-container { grid-template-columns: 1fr 1fr; } }
         
-        // Martingale Multiplier calculation step matching backend code parameters
-        const nextTarget = currentStake * 2;
-        if (nextTarget <= getMaxStake()) {
-            currentStake = nextTarget;
-            updateLog(`🔄 Martingale active: Doubling down stake values to $${currentStake.toFixed(2)}`);
-        } else {
-            updateLog(`⚠️ Maximum risk ceiling breached ($${getMaxStake()}). Resetting stake back to initial values.`);
-            currentStake = getInitialStake();
-        }
-    }
-    
-    // Refresh visual numeric parameters inside your card modules
-    if (profitDisplay) {
-        profitDisplay.innerText = `$${simTotalProfit.toFixed(2)}`;
-        profitDisplay.style.color = simTotalProfit >= 0 ? "#00ff88" : "#ff4444";
-    }
-    if (stakeDisplay) stakeDisplay.innerText = `$${currentStake.toFixed(2)}`;
-    
-    // Check baseline profit target bounds
-    if (simTotalProfit >= getTakeProfit()) {
-        updateLog(`🏁 [TARGET ACHIEVED] Take Profit boundary reached. Shutting down automation loops safely...`);
-        stopBot();
-    }
-}
-
-function handleTick(tick) {
-    const quote = String(tick.quote);
-    const digitsOnly = quote.replace(/\D/g, '');
-    if (!digitsOnly.length) return;
-
-    const lastDigit = Number(digitsOnly[digitsOnly.length - 1]);
-
-    // Track distributions to analyze live market pattern weights
-    digitHistory.push(lastDigit);
-    if (digitHistory.length > 10) digitHistory.shift();
-
-    const evensCount = digitHistory.filter(d => d % 2 === 0).length;
-    const evenPercentage = ((evensCount / digitHistory.length) * 100).toFixed(0);
-
-    updateLog(`Tick: ${quote} | Final Integer: [ ${lastDigit} ] | Trend Profile: ${evenPercentage}% Even`);
-
-    // Checks condition matching your original logic: "lastDigit % 2 === 0"
-    if (lastDigit % 2 === 0) {
-        updateLog(`🎯 [EVEN PATTERN ENCOUNTERED] -> Requesting 1-Tick Rise execution payload...`);
+        .card { background: #161a22; padding: 20px; border-radius: 8px; border: 1px solid #242936; margin-bottom: 15px; }
+        .card h3 { margin-bottom: 15px; color: #c5a880; font-size: 16px; letter-spacing: 0.5px; }
         
-        // Simulates contract evaluation loop exactly 1 tick later
-        ws.once('message_next_tick', () => {}); 
-        setTimeout(() => {
-            if (!isRunning) return;
-            // Fetch next fresh calculation update
-            simulateContractSettlement(true, lastDigit);
-        }, 1000);
-    }
-}
-
-function startBot() {
-    if (isRunning) return;
-    
-    isRunning = true;
-    currentStake = getInitialStake();
-    logBox.innerText = "🤖 Initializing public secure sandbox connection loop...";
-    
-    if (stakeDisplay) stakeDisplay.innerText = `$${currentStake.toFixed(2)}`;
-
-    // Utilizing public proxy sandbox credential endpoint app_id 1089 to completely protect tokens 
-    ws = new WebSocket('wss://://derivws.com');
-
-    ws.onopen = function() {
-        if (statusText) statusText.innerText = "Online";
-        if (statusDot) {
-            statusDot.className = "dot online";
-            statusDot.style.background = "#00ff88"; // Neon green display overlay indicator
-        }
-        updateLog("Connected to secure multi-regulated data engine.");
+        .metric-row { display: flex; justify-content: space-between; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #242936; }
+        .metric-value { font-weight: bold; color: #00ff88; }
         
-        // Sends subscribe object matching '1HZ100V' symbol variable definition configuration properties
-        ws.send(JSON.stringify({
-            ticks: '1HZ100V',
-            subscribe: 1,
-            req_id: nextRequestId()
-        }));
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; color: #8b949e; font-size: 13px; margin-bottom: 5px; }
+        .form-group input, .form-group select { width: 100%; background: #0b0c10; border: 1px solid #242936; padding: 10px; color: #fff; border-radius: 6px; outline: none; }
+        .form-group input:focus { border-color: #45f3ff; }
         
-        updateLog("Subscribed to Volatility 100 Index pattern pipeline. Analyzing blocks...");
-    };
-
-    ws.onmessage = function(event) {
-        if (!isRunning) return;
+        .btn { width: 100%; padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-bottom: 10px; font-size: 14px; }
+        .btn-start { background: linear-gradient(135deg, #00ff88, #00b359); color: #000; }
+        .btn-stop { background: #ff4444; color: #fff; }
         
-        let message;
-        try {
-            message = JSON.parse(event.data);
-        } catch {
-            console.error('Parsing context allocation dropped by server node protocols');
-            return;
-        }
-
-        if (message.msg_type === 'tick') {
-            handleTick(message.tick);
-        }
+        .console { background: #000; font-family: 'Courier New', Courier, monospace; font-size: 12px; color: #00ff88; padding: 15px; border-radius: 6px; height: 180px; overflow-y: auto; white-space: pre-line; border: 1px solid #242936; margin-bottom: 15px; }
         
-        if (message.error) {
-            updateLog(`Broker server parameter notification: ${message.error.message}`);
-        }
-    };
+        .history-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; text-align: left; }
+        .history-table th { background: #1f2833; color: #45f3ff; padding: 10px; border: 1px solid #242936; }
+        .history-table td { padding: 8px 10px; border: 1px solid #242936; background: #0b0c10; }
+        .win-row { color: #00ff88; }
+        .loss-row { color: #ff4444; }
+    </style>
+</head>
+<body>
 
-    ws.onerror = function() {
-        updateLog("Network interface failure observed.");
-    };
+    <div class="header">
+        <div class="logo">VAGGERTRADE ENGINE</div>
+        <div class="status-container">
+            <div id="statusDot" class="dot"></div>
+            <span id="statusText" style="color: #8b949e; font-size: 14px;">Offline</span>
+        </div>
+    </div>
 
-    ws.onclose = function() {
-        updateLog("🛑 Automation loops disengaged safely. Connection torn down.");
-        if (statusText) statusText.innerText = "Offline";
-        if (statusDot) {
-            statusDot.className = "dot offline";
-            statusDot.style.background = "#ff4444";
-        }
-    };
-}
-
-function stopBot() {
-    isRunning = false;
-    if (ws) {
-        ws.close();
-    }
-}
-
-// Bind operational event blocks to your specific actions panel element classes
-if (startBtn) startBtn.addEventListener('click', startBot);
-if (stopBtn) stopBtn.addEventListener('click', stopBot);
+    <div class="grid-container">
+        <div class="card">
+            <h3>PREMIUM BOT PARAMETERS</h3>
+            <div class="form-group">
+                <label>Target Execution Engine</label>
+                <select id="strategyDropdown">
+                    <option value="Martingale">Vaggertrade AI Scalper (Martingale Loop)</option>
+                    <option value="Flat">Quantum Core (Fixed Risk Mode)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Initial Stake Amount ($)</label>
+                <input type="number" id="initialStake" value="2">
+            </div>
+            <div class="form-group">
+                <label>Maximum Stake Risk Cap ($)</label>
+                <input type="number" id="maxStake" value="5000">
+            </div>
+            <div class="form-group">
+                <label>Take Profit Target ($)</label>
+                <input type="number" id="takeProfit" value="10">
+            </div>
             
+            <button id="startBtn" onclick="startBot()" class="btn btn-start">ACTIVATE PREMIUM SCRIPT</button>
+            <button id="stopBtn" onclick="stopBot()" class="btn btn-stop">EMERGENCY DISCONNECT</button>
+        </div>
+
+        <div class="card">
+            <h3>LIVE SYSTEM METRICS</h3>
+            <div class="metric-row">
+                <span>Account Balance:</span>
+                <span id="balance" class="metric-value" style="color: #fff;">$20,375.81</span>
+            </div>
+            <div class="metric-row">
+                <span>Active Working Stake:</span>
+                <span id="stake" class="metric-value" style="color: #45f3ff;">$0.00</span>
+            </div>
+            <div class="metric-row">
+                <span>Net Profit / Loss Session:</span>
+                <span id="profit" class="metric-value">$0.00</span>
+            </div>
+            
+            <h3>LIVE STREAM ACTIVITY LOG</h3>
+            <div id="log" class="console">Waiting for engine validation parameters...</div>
+        </div>
+    </div>
+
+    <div class="card" style="width: 100%;">
+        <h3>TRANSACTION HISTORY LEDGER</h3>
+        <div style="max-height: 200px; overflow-y: auto;">
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>Time Index</th>
+                        <th>Strategy Mode</th>
+                        <th>Target Venture Risk</th>
+                        <th>Contract Verdict</th>
+                        <th>Running Balance</th>
+                    </tr>
+                </thead>
+                <tbody id="historyBody">
+                    <tr>
+                        <td colspan="5" style="text-align: center; color: #8b949e;">No transaction entries logged yet.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let simInterval;
+        let isRunning = false;
+        let currentStake = 2;
+        let initialStakeSetting = 2;
+        let maxStakeSetting = 5000;
+        let takeProfitSetting = 10;
+        let totalProfit = 0.00;
+        let baseBalance = 20375.81;
+        let transactionCount = 0;
+
+        function updateLog(message) {
+            const logBox = document.getElementById('log');
+            if (logBox) {
+                logBox.innerText += "\n" + message;
+                logBox.scrollTop = logBox.scrollHeight;
+            }
+        }
+
+        function addRowToLedger(strategy, stakeAmount, verdict, isWin) {
+            const body = document.getElementById('historyBody');
+            if (transactionCount === 0) body.innerHTML = "";
+            
+            transactionCount++;
+            const now = new Date();
+            const timeString = now.toTimeString().split(' ')[0];
+            const currentBal = baseBalance + totalProfit;
+            
+            const rowHTML = `
+                <tr class="${isWin ? 'win-row' : 'loss-row'}">
+                    <td>${timeString}</td>
+                    <td>${strategy}</td>
+                    <td>$${stakeAmount.toFixed(2)}</td>
+                    <td>${verdict}</td>
+                    <td style="color: white;">$${currentBal.toFixed(2)}</td>
+                </tr>
+            `;
+            body.innerHTML = rowHTML + body.innerHTML;
+        }
+
+        function updateUI() {
+            if (document.getElementById('profit')) {
+                document.getElementById('profit').innerText = `${totalProfit >= 0 ? '+' : ''}$${totalProfit.toFixed(2)}`;
+                document.getElementById('profit').style.color = totalProfit >= 0 ? "#00ff88" : "#ff4444";
+            }
+            if (document.getElementById('balance')) {
+                let currentBal = baseBalance + totalProfit;
+                document.getElementById('balance').innerText = `$${currentBal.toFixed(2)}`;
+            }
+            if (document.getElementById('stake')) {
+                document.getElementById('stake').innerText = `$${currentStake.toFixed(2)}`;
+            }
+        }
+
+        function handleContractResult(isWin) {
+            const strategyMode = document.getElementById('strategyDropdown').value;
+            const payoutFactor = 0.95;
+            const oldStake = currentStake;
+
+            if (isWin) {
+                const winAmount = currentStake * payoutFactor;
+                totalProfit += winAmount;
+                updateLog(`🎉 [WIN] Sequence matched. Return: +$${winAmount.toFixed(2)}`);
+                addRowToLedger(strategyMode, oldStake, `WIN (+$${winAmount.toFixed(2)})`, true);
+                currentStake = initialStakeSetting;
+            } else {
+                totalProfit -= currentStake;
+                updateLog(`❌ [LOSS] Sequence missed. Deficit: -$${currentStake.toFixed(2)}`);
+                addRowToLedger(strategyMode, oldStake, `LOSS (-$${oldStake.toFixed(2)})`, false);
+                
+                if (strategyMode === 'Martingale') {
+                    const doubleStake = currentStake * 2;
+                    if (doubleStake <= maxStakeSetting) {
+                        currentStake = doubleStake;
+                        updateLog(`🔄 Martingale: Doubling allocation to $${currentStake.toFixed(2)}`);
+                    } else {
+                        updateLog(`⚠️ Max risk parameters reached. Safety reset executed.`);
+                        currentStake = initialStakeSetting;
+                    }
+                } else {
+                    currentStake = initialStakeSetting;
+                }
+            }
+            updateUI();
+
+            if (totalProfit >= takeProfitSetting) {
+                updateLog(`🏁 [TARGET MET] Take profit boundary reached. Bot loop stopped.`);
+                stopBot();
+            }
+        }
+
+  
