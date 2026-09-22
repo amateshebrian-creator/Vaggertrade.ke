@@ -1,4 +1,5 @@
-<!DOCTYPE html>
+
+        <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -41,7 +42,6 @@
 </head>
 <body>
 
-    <!-- 🟢 Updated Header Label to Vaggertrade Engine -->
     <div class="header">
         <div class="logo">VAGGERTRADE ENGINE</div>
         <div class="status-container">
@@ -120,7 +120,6 @@
     </div>
 
     <script>
-        let ws;
         let simInterval;
         let isRunning = false;
         let currentStake = 2;
@@ -130,38 +129,6 @@
         let totalProfit = 0.00;
         let baseBalance = 20375.81;
         let transactionCount = 0;
-
-        function //playChime(isWin) {
-            try {
-                const AudioContext = window.AudioContext || window.webkitAudioContext;
-                if (!AudioContext) return;
-                const ctx = new AudioContext();
-                const osc = ctx.createOscillator();
-                const gain = ctx.createGain();
-                
-                osc.connect(gain);
-                gain.connect(ctx.destination);
-                
-                if (isWin) {
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(880, ctx.currentTime);
-                    osc.frequency.setValueAtTime(1320, ctx.currentTime + 0.1);
-                    gain.gain.setValueAtTime(0.3, ctx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
-                    osc.start(ctx.currentTime);
-                    osc.stop(ctx.currentTime + 0.3);
-                } else {
-                    osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(220, ctx.currentTime);
-                    gain.gain.setValueAtTime(0.2, ctx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
-                    osc.start(ctx.currentTime);
-                    osc.stop(ctx.currentTime + 0.2);
-                }
-            } catch (e) {
-                console.log("Audio feedback matrix blocked.");
-            }
-        }
 
         function updateLog(message) {
             const logBox = document.getElementById('log');
@@ -211,7 +178,38 @@
             const payoutFactor = 0.95;
             const oldStake = currentStake;
 
-            playChime(isWin);
-
             if (isWin) {
-        
+                const winAmount = currentStake * payoutFactor;
+                totalProfit += winAmount;
+                updateLog(`🎉 [WIN] Sequence matched. Return: +$${winAmount.toFixed(2)}`);
+                addRowToLedger(strategyMode, oldStake, `WIN (+$${winAmount.toFixed(2)})`, true);
+                currentStake = initialStakeSetting;
+            } else {
+                totalProfit -= currentStake;
+                updateLog(`❌ [LOSS] Sequence missed. Deficit: -$${currentStake.toFixed(2)}`);
+                addRowToLedger(strategyMode, oldStake, `LOSS (-$${oldStake.toFixed(2)})`, false);
+                
+                if (strategyMode === 'Martingale') {
+                    const doubleStake = currentStake * 2;
+                    if (doubleStake <= maxStakeSetting) {
+                        currentStake = doubleStake;
+                        updateLog(`🔄 Martingale: Doubling allocation to $${currentStake.toFixed(2)}`);
+                    } else {
+                        updateLog(`⚠️ Max risk parameters reached. Safety reset executed.`);
+                        currentStake = initialStakeSetting;
+                    }
+                } else {
+                    currentStake = initialStakeSetting;
+                }
+            }
+            updateUI();
+
+            if (totalProfit >= takeProfitSetting) {
+                updateLog(`🏁 [TARGET MET] Take profit boundary reached. Bot loop stopped.`);
+                stopBot();
+            }
+        }
+
+        function simulateTickEngine() {
+            if (!isRunning) return;
+                
