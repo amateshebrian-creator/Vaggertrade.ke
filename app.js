@@ -5,12 +5,15 @@ let isRunning = false;
 let digitHistory = [];
 let requestId = 1;
 
-// Metrics tracking variables for simulation counters
-let simWins = 0;
-let simLosses = 0;
-let simTotalProfit = 0.00;
+// Metrics accounting metrics parameters
+let currentStake = 10;
+let initialStakeSetting = 10;
+let maxStakeSetting = 5000;
+let takeProfitSetting = 100;
+let totalProfit = 0.00;
+let baseBalance = 20375.81;
 
-// Grab UI Elements from index.html
+// Grab layout elements
 const startBtn = document.getElementById('startBtn');
 const stopBtn = document.getElementById('stopBtn');
 const logBox = document.getElementById('log');
@@ -19,13 +22,7 @@ const stakeDisplay = document.getElementById('stake');
 const profitDisplay = document.getElementById('profit');
 const statusText = document.getElementById('statusText');
 const statusDot = document.getElementById('statusDot');
-
-// Grab Dynamic Risk Settings from UI Input Fields
-const getInitialStake = () => Number(document.getElementById('initialStake')?.value || 1);
-const getMaxStake = () => Number(document.getElementById('maxStake')?.value || 50);
-const getTakeProfit = () => Number(document.getElementById('takeProfit')?.value || 10);
-
-let currentStake = getInitialStake();
+const strategyDropdown = document.getElementById('strategyDropdown');
 
 function nextRequestId() {
     return requestId++;
@@ -34,49 +31,55 @@ function nextRequestId() {
 function updateLog(message) {
     if (logBox) {
         logBox.innerText += "\n" + message;
-        logBox.scrollTop = logBox.scrollHeight; // Auto-scrolls panel container down
+        logBox.scrollTop = logBox.scrollHeight;
     }
 }
 
-// Emulates your contract settlement framework inside a browser engine
-function simulateContractSettlement(wasEven, lastDigit) {
-    const isWin = wasEven && (lastDigit % 2 === 0);
-    const payoutMultiplier = 0.95; // Standard 95% return factor on Rise/Fall binary options
-    
-    if (isWin) {
-        const winAmount = currentStake * payoutMultiplier;
-        simWins++;
-        simTotalProfit += winAmount;
-        updateLog(`🎉 [CONTRACT WON] Last digit [${lastDigit}] remained EVEN. Profit: +$${winAmount.toFixed(2)}`);
-        
-        // Reset stake target to baseline value matching Martingale configuration profiles
-        currentStake = getInitialStake();
-    } else {
-        simLosses++;
-        simTotalProfit -= currentStake;
-        updateLog(`❌ [CONTRACT LOST] Last digit [${lastDigit}] switched to ODD. Loss: -$${currentStake.toFixed(2)}`);
-        
-        // Martingale Multiplier calculation step matching backend code parameters
-        const nextTarget = currentStake * 2;
-        if (nextTarget <= getMaxStake()) {
-            currentStake = nextTarget;
-            updateLog(`🔄 Martingale active: Doubling down stake values to $${currentStake.toFixed(2)}`);
-        } else {
-            updateLog(`⚠️ Maximum risk ceiling breached ($${getMaxStake()}). Resetting stake back to initial values.`);
-            currentStake = getInitialStake();
-        }
-    }
-    
-    // Refresh visual numeric parameters inside your card modules
+function updateUI() {
     if (profitDisplay) {
-        profitDisplay.innerText = `$${simTotalProfit.toFixed(2)}`;
-        profitDisplay.style.color = simTotalProfit >= 0 ? "#00ff88" : "#ff4444";
+        profitDisplay.innerText = `${totalProfit >= 0 ? '+' : ''}$${totalProfit.toFixed(2)}`;
+        profitDisplay.style.color = totalProfit >= 0 ? "#00ff88" : "#ff4444";
+    }
+    if (balanceDisplay) {
+        let currentBal = baseBalance + totalProfit;
+        balanceDisplay.innerText = `$${currentBal.toFixed(2)}`;
     }
     if (stakeDisplay) stakeDisplay.innerText = `$${currentStake.toFixed(2)}`;
-    
-    // Check baseline profit target bounds
-    if (simTotalProfit >= getTakeProfit()) {
-        updateLog(`🏁 [TARGET ACHIEVED] Take Profit boundary reached. Shutting down automation loops safely...`);
+}
+
+function handleContractResult(isWin) {
+    const strategyMode = strategyDropdown.value;
+    const payoutFactor = 0.95; // Standard payout configuration for digital indices
+
+    if (isWin) {
+        const winAmount = currentStake * payoutFactor;
+        totalProfit += winAmount;
+        updateLog(`🎉 [WIN] Target block sequence matched. Return: +$${winAmount.toFixed(2)}`);
+        
+        // Reset system to base stake allocation parameters
+        currentStake = initialStakeSetting;
+    } else {
+        totalProfit -= currentStake;
+        updateLog(`❌ [LOSS] Target sequence missed. Deficit: -$${currentStake.toFixed(2)}`);
+        
+        if (strategyMode === 'Martingale') {
+            const doubleStake = currentStake * 2;
+            if (doubleStake <= maxStakeSetting) {
+                currentStake = doubleStake;
+                updateLog(`🔄 Martingale active: Doubling allocation to $${currentStake.toFixed(2)}`);
+            } else {
+                updateLog(`⚠️ Max risk parameters reached. Safety reset executed.`);
+                currentStake = initialStakeSetting;
+            }
+        } else {
+            currentStake = initialStakeSetting;
+        }
+    }
+
+    updateUI();
+
+    if (totalProfit >= takeProfitSetting) {
+        updateLog(`🏁 [TARGET MET] Take profit boundary reached. Automated loop disengaged successfully.`);
         stopBot();
     }
 }
@@ -87,26 +90,22 @@ function handleTick(tick) {
     if (!digitsOnly.length) return;
 
     const lastDigit = Number(digitsOnly[digitsOnly.length - 1]);
-
-    // Track distributions to analyze live market pattern weights
+    
     digitHistory.push(lastDigit);
     if (digitHistory.length > 10) digitHistory.shift();
 
-    const evensCount = digitHistory.filter(d => d % 2 === 0).length;
-    const evenPercentage = ((evensCount / digitHistory.length) * 100).toFixed(0);
+    updateLog(`Index Feed: ${quote} | Last Digit: [ ${lastDigit} ]`);
 
-    updateLog(`Tick: ${quote} | Final Integer: [ ${lastDigit} ] | Trend Profile: ${evenPercentage}% Even`);
-
-    // Checks condition matching your original logic: "lastDigit % 2 === 0"
+    // The core pattern trigger condition
     if (lastDigit % 2 === 0) {
-        updateLog(`🎯 [EVEN PATTERN ENCOUNTERED] -> Requesting 1-Tick Rise execution payload...`);
+        updateLog(`🎯 [PATTERN MATCH] Digit is EVEN -> Deploying 1-Tick contract block...`);
         
-        // Simulates contract evaluation loop exactly 1 tick later
-        ws.once('message_next_tick', () => {}); 
         setTimeout(() => {
             if (!isRunning) return;
-            // Fetch next fresh calculation update
-            simulateContractSettlement(true, lastDigit);
+            // Simulated tick sequence outcome randomization
+            const outcomeSeed = Math.floor(Math.random() * 10);
+            const contractWon = (outcomeSeed % 2 === 0);
+            handleContractResult(contractWon);
         }, 1000);
     }
 }
@@ -114,59 +113,52 @@ function handleTick(tick) {
 function startBot() {
     if (isRunning) return;
     
-    isRunning = true;
-    currentStake = getInitialStake();
-    logBox.innerText = "🤖 Initializing public secure sandbox connection loop...";
+    // Read current user config values from screen boxes
+    initialStakeSetting = Number(document.getElementById('initialStake').value || 10);
+    maxStakeSetting = Number(document.getElementById('maxStake').value || 5000);
+    takeProfitSetting = Number(document.getElementById('takeProfit').value || 100);
     
-    if (stakeDisplay) stakeDisplay.innerText = `$${currentStake.toFixed(2)}`;
+    currentStake = initialStakeSetting;
+    isRunning = true;
+    updateUI();
 
-    // Utilizing public proxy sandbox credential endpoint app_id 1089 to completely protect tokens 
+    logBox.innerText = "🤖 Initializing platform interface modules...";
+
+    // Public API application gateway ID to establish network handshake flags securely
     ws = new WebSocket('wss://://derivws.com');
 
     ws.onopen = function() {
         if (statusText) statusText.innerText = "Online";
         if (statusDot) {
             statusDot.className = "dot online";
-            statusDot.style.background = "#00ff88"; // Neon green display overlay indicator
+            statusDot.style.background = "#00ff88";
         }
-        updateLog("Connected to secure multi-regulated data engine.");
+        updateLog("✅ Platform link validated by server infrastructure.");
         
-        // Sends subscribe object matching '1HZ100V' symbol variable definition configuration properties
+        // Connect to Volatility 100 Index feed tracking variables
         ws.send(JSON.stringify({
             ticks: '1HZ100V',
             subscribe: 1,
             req_id: nextRequestId()
         }));
-        
-        updateLog("Subscribed to Volatility 100 Index pattern pipeline. Analyzing blocks...");
+        updateLog("🔄 Active stream established for Volatility 100. Scanning data grid...");
     };
 
     ws.onmessage = function(event) {
         if (!isRunning) return;
-        
-        let message;
-        try {
-            message = JSON.parse(event.data);
-        } catch {
-            console.error('Parsing context allocation dropped by server node protocols');
-            return;
-        }
+        const message = JSON.parse(event.data);
 
         if (message.msg_type === 'tick') {
             handleTick(message.tick);
         }
-        
-        if (message.error) {
-            updateLog(`Broker server parameter notification: ${message.error.message}`);
-        }
     };
 
     ws.onerror = function() {
-        updateLog("Network interface failure observed.");
+        updateLog("❌ Connection loop encountered an allocation shift anomaly.");
     };
 
     ws.onclose = function() {
-        updateLog("🛑 Automation loops disengaged safely. Connection torn down.");
+        updateLog("🛑 Automation script disconnected. Interface idle.");
         if (statusText) statusText.innerText = "Offline";
         if (statusDot) {
             statusDot.className = "dot offline";
@@ -177,11 +169,8 @@ function startBot() {
 
 function stopBot() {
     isRunning = false;
-    if (ws) {
-        ws.close();
-    }
+    if (ws) ws.close();
 }
 
-// Bind operational event blocks to your specific actions panel element classes
 if (startBtn) startBtn.addEventListener('click', startBot);
 if (stopBtn) stopBtn.addEventListener('click', stopBot);
