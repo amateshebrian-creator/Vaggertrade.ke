@@ -1,5 +1,7 @@
 // 1. Open a secure connection to Deriv's public data server
-const ws = new WebSocket('wss://://derivws.com'); // 1089 is the default free testing app ID
+const ws = new WebSocket('wss://://derivws.com');
+; // 1089 is the default free testing app ID
+const startBtn = document.getElementById('start-btn');
 
 const startBtn = document.getElementById('start-btn'); // Change to match your HTML button ID
 const logBox = document.querySelector('.Live Activity console placeholder'); // Change to your log box class/ID
