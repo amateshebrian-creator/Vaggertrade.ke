@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vaggertrade Engine</title>
+
+<style>
+:root{
+  --bg:#070b09;
+  --panel:#0d1411;
+  --border:#1d2c24;
+  --text:#f1f5f2;
+  --muted:#7f8e86;
+  --green:#27f58b;
+  --red:#ff5d6c;
+}
+
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  min-height:100vh;
+  background:
+    radial-gradient(circle at 50% -10%,rgba(39,245,139,.09),transparent 35%),
+    var(--bg);
+  color:var(--text);
+  font-family:Arial,sans-serif;
+}
+
+button,input{font:inherit}
+
+.topbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:22px 5%;
+  border-bottom:1px solid var(--border);
+  background:#080d0a;
+}
+
+.brand{
+  display:flex;
+  gap:12px;
+  align-items:center;
+}
+
+.brand-mark{
+  width:42px;
+  height:42px;
+  display:grid;
+  place-items:center;
+  border:1px solid var(--green);
+  border-radius:12px;
+  color:var(--green);
+  font-weight:900;
+}
+
+.brand h1{
+  margin:0;
+  font-size:19px;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+}
+
+.brand p{
+  margin:5px 0 0;
+  color:var(--muted);
+  font-size:12px;
+}
+
+.connection{
+  display:flex;
+  gap:8px;
+  align-items:center;
+  color:var(--muted);
+  font-size:12px;
+  text-transform:uppercase;
+}
+
+.status-dot{
+  width:9px;
+  height:9px;
+  border-radius:50%;
+  background:var(--red);
+}
+
+.status-dot.online{
+  background:var(--green);
+  box-shadow:0 0 14px var(--green);
+}
+
+.container{
+  width:min(1180px,calc(100% - 24px));
+  margin:32px auto;
+}
+
+.hero{
+  margin-bottom:20px;
+}
+
+.hero h2{
+  margin:0;
+  font-size:32px;
+  text-transform:uppercase;
+}
+
+.hero p{
+  color:var(--muted);
+}
+
+.card{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:16px;
+  box-shadow:0 15px 45px #0008;
+}
+
+.parameters{
+  padding:24px;
+}
+
+.section-title h2,
+.metrics-title,
+.activity h2{
+  font-size:14px;
+  text-transform:uppercase;
+  letter-spacing:.1em;
+}
+
+.section-title p{
+  color:var(--muted);
+  font-size:12px;
+}
+
+.form-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:15px;
+  margin-top:20px;
+}
+
+label{
+  display:grid;
+  gap:8px;
+  color:var(--muted);
+  font-size:12px;
+  text-transform:uppercase;
+}
+
+input{
+  padding:14px;
+  border-radius:10px;
+  border:1px solid var(--border);
+  background:#080e0b;
+  color:#fff;
+  outline:none;
+}
+
+input:focus{
+  border-color:var(--green);
+}
+
+.button-row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  margin-top:20px;
+}
+
+.btn{
+  padding:15px;
+  border-radius:11px;
+  font-weight:800;
+  text-transform:uppercase;
+  cursor:pointer;
+}
+
+.btn-primary{
+  background:var(--green);
+  color:#031008;
+  border:0;
+}
+
+.btn-secondary{
+  background:#141b17;
+  color:#fff;
+  border:1px solid var(--border);
+}
+
+.btn:disabled{
+  opacity:.4;
+  cursor:not-allowed;
+}
+
+.metrics-title{
+  margin:28px 0 14px;
+}
+
+.metrics{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:14px;
+}
+
+.metric{
+  padding:20px;
+}
+
+.metric span{
+  color:var(--muted);
+  font-size:11px;
+  text-transform:uppercase;
+}
+
+.metric strong{
+  display:block;
+  margin-top:9px;
+  font-size:23px;
+}
+
+.activity{
+  margin-top:22px;
+  padding:22px;
+}
+
+.activity-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.clear-btn{
+  background:transparent;
+  color:var(--muted);
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:7px 10px;
+  cursor:pointer;
+}
+
+.log{
+  margin-top:15px;
+  min-height:120px;
+  max-height:260px;
+  overflow:auto;
+  padding:14px;
+  background:#080d0a;
+  border:1px solid var(--border);
+  border-radius:10px;
+  font:12px monospace;
+}
+
+.log-entry{
+  padding:7px 0;
+  border-bottom:1px solid #ffffff08;
+  color:#b8c4bd;
+}
+
+.log-time{
+  color:var(--green);
+  margin-right:9px;
+}
+
+.notice{
+  margin-top:22px;
+  padding:17px 20px;
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.6;
+}
+
+footer{
+  text-align:center;
+  padding:28px;
+  color:#59665f;
+  font-size:11px;
+}
+
+@media(max-width:800px){
+  .form-grid,
+  .metrics{
+    grid-template-columns:1fr 1fr;
+  }
+}
+
+@media(max-width:560px){
+  .form-grid,
+  .metrics,
+  .button-row{
+    grid-template-columns:1fr;
+  }
+
+  .topbar{
+    padding:18px 14px;
+  }
+
+  .hero h2{
+    font-size:24px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-mark">V</div>
+    <div>
+      <h1>Vaggertrade Engine</h1>
+      <p>Target Execution Engine</p>
+    </div>
+  </div>
+
+  <div class="connection">
+    <span id="statusDot" class="status-dot"></span>
+    <span id="statusText">Offline</span>
+  </div>
+</header>
+
+<main class="container">
+
+<section class="hero">
+  <h2>Premium Bot Parameters</h2>
+  <p>Vaggertrade AI Scalper (Martingale Loop)</p>
+</section>
+
+<section class="card parameters">
+
+  <div class="section-title">
+    <h2>Premium Bot Parameters</h2>
+    <p>Target Execution Engine</p>
+  </div>
+
+  <div class="form-grid">
+
+    <label>
+      Initial Stake Amount ($)
+      <input id="initialStake"
+             type="number"
+             min="0.35"
+             step="0.01"
+             value="2">
+    </label>
+
+    <label>
+      Maximum Stake Risk Cap ($)
+      <input id="maxStake"
+             type="number"
+             min="0.35"
+             step="0.01"
+             value="5000">
+    </label>
+
+    <label>
+      Take Profit Target ($)
+      <input id="takeProfit"
+             type="number"
+             min="0"
+             step="0.01"
+             value="10">
+    </label>
+
+  </div>
+
+  <div class="button-row">
+
+    <button id="startBot"
+            class="btn btn-primary">
+      Activate Premium Script
+    </button>
+
+    <button id="stopBot"
+            class="btn btn-secondary">
+      Emergency Disconnect
+    </button>
+
+  </div>
+
+</section>
+
+<h2 class="metrics-title">
+  Live System Metrics
+</h2>
+
+<section class="metrics">
+
+  <div class="card metric">
+    <span>Account Balance</span>
+    <strong id="balance">$0.00</strong>
+  </div>
+
+  <div class="card metric">
+    <span>Active Working Stake</span>
+    <strong id="currentStake">$0.00</strong>
+  </div>
+
+  <div class="card metric">
+    <span>Net Profit / Loss Session</span>
+    <strong id="profitLoss">$0.00</strong>
+  </div>
+
+  <div class="card metric">
+    <span>Engine Status</span>
+    <strong id="activeTrade">None</strong>
+  </div>
+
+</section>
+
+<section class="card activity">
+
+  <div class="activity-head">
+    <h2>Live Stream Activity Log</h2>
+
+    <button id="clearLog"
+            class="clear-btn">
+      Clear
+    </button>
+  </div>
+
+  <div id="activityLog" class="log">
+
+    <div class="log-entry">
+      <span class="log-time">--:--:--</span>
+      Waiting for engine validation parameters....
+    </div>
+
+  </div>
+
+</section>
+
+<section class="card notice">
+  <strong>Risk Notice:</strong>
+  Martingale trading can increase losses rapidly.
+  Test with a demo account first and keep a strict risk cap.
+  Real account information will only appear when a working
+  backend is connected.
+</section>
+
+</main>
+
+<footer>
+  Vaggertrade.ke · Target Execution Engine
+</footer>
+
+<script>
+'use strict';
+
+const state = {
+  running: false,
+  connected: false,
+  timer: null
+};
+
+const $ = (id) => document.getElementById(id);
+
+function log(message) {
+  const box = $('activityLog');
+
+  if (!box) return;
+
+  const entry = document.createElement('div');
+  entry.className = 'log-entry';
+
+  const time = document.createElement('span');
+  time.className = 'log-time';
+  time.textContent = new Date().toLocaleTimeString();
+
+  entry.appendChild(time);
+  entry.appendChild(document.createTextNode(message));
+
+  box.prepend(entry);
+}
+
+function setConnection(online) {
+  state.connected = online;
+
+  const dot = $('statusDot');
+  const text = $('statusText');
+
+  if (dot) {
+    dot.classList.toggle('online', online);
+  }
+
+  if (text) {
+    text.textContent = online ? 'Online' : 'Offline';
+  }
+}
+
+function setBotState(running) {
+  state.running = running;
+
+  if ($('startBot')) {
+    $('startBot').disabled = running;
+  }
+
+  if ($('stopBot')) {
+    $('stopBot').disabled = !running;
+  }
+
+  if ($('activeTrade')) {
+    $('activeTrade').textContent =
+      running ? 'Running' : 'None';
+  }
+}
+
+async function api(endpoint, options = {}) {
+
+  const response = await fetch(endpoint, {
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    ...options
+  });
+
+  if (!response.ok) {
+    throw new Error(
+      `Server returned ${response.status}`
+    );
+  }
+
+  return response.json();
+}
+
+async function refreshDashboard() {
+
+  try {
+
+    const data = await api('/api/status');
+
+    setConnection(true);
+
+    if (data.balance !== undefined) {
+      $('balance').textContent =
+        '$' + Number(data.balance).toFixed(2);
+    }
+
+    if (data.currentStake !== undefined) {
+      $('currentStake').textContent =
+        '$' + Number(data.currentStake).toFixed(2);
+    }
+
+    if (data.profitLoss !== undefined) {
+      $('profitLoss').textContent =
+        '$' + Number(data.profitLoss).toFixed(2);
+    }
+
+    if (data.running !== undefined) {
+      setBotState(Boolean(data.running));
+    }
+
+  } catch (error) {
+
+    setConnection(false);
+
+  }
+}
+
+async function startBot() {
+
+  const initialStake =
+    Number($('initialStake').value);
+
+  const maxStake =
+    Number($('maxStake').value);
+
+  const takeProfit =
+    Number($('takeProfit').value);
+
+  if (
+    !Number.isFinite(initialStake) ||
+    initialStake <= 0
+  ) {
+    log('Invalid initial stake.');
+    return;
+  }
+
+  if (
+    !Number.isFinite(maxStake) ||
+    maxStake < initialStake
+  ) {
+    log(
+      'Maximum stake must be at least the initial stake.'
+    );
+    return;
+  }
+
+  try {
+
+    const result = await api(
+      '/api/bot/start',
+      {
+        method: 'POST',
+
+        body: JSON.stringify({
+          initialStake,
+          maxStake,
+          takeProfit
+        })
+      }
+    );
+
+    setBotState(true);
+
+    log(
+      result.message ||
+      'Premium trading engine activated.'
+    );
+
+  } catch (error) {
+
+    log(
+      'Unable to start engine: ' +
+      error.message
+    );
+
+  }
+}
+
+async function stopBot() {
+
+  try {
+
+    const result = await api(
+      '/api/bot/stop',
+      {
+        method: 'POST'
+      }
+    );
+
+    setBotState(false);
+
+    log(
+      result.message ||
+      'Emergency disconnect activated.'
+    );
+
+  } catch (error) {
+
+    log(
+      'Unable to stop engine: ' +
+      error.message
+    );
+
+  }
+}
+
+$('startBot')?.addEventListener(
+  'click',
+  startBot
+);
+
+$('stopBot')?.addEventListener(
+  'click',
+  stopBot
+);
+
+$('clearLog')?.addEventListener(
+  'click',
+  () => {
+    $('activityLog').innerHTML = '';
+  }
+);
+
+refreshDashboard();
+
+state.timer = setInterval(
+  refreshDashboard,
+  3000
+);
+</script>
+
+</body>
+</html>
