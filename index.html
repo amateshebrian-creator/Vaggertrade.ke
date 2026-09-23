@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vaggertrade Engine</title>
+    <style>
+        :root {
+            --bg-color: #0b0f17;
+            --card-bg: #141a24;
+            --text-color: #abb3bf;
+            --text-muted: #647080;
+            --primary-green: #00c853;
+            --primary-red: #ff3d00;
+            --border-color: #1f2937;
+            --accent-cyan: #00bcd4;
+            --accent-orange: #ff9100;
+        }
+        body {
+            font-family: sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 480px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 15px;
+        }
+        .header h1 {
+            font-size: 1.3rem;
+            color: var(--accent-cyan);
+            margin: 0;
+            letter-spacing: 1px;
+        }
+        .status-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: var(--primary-red);
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+        .status-dot.online {
+            background-color: var(--primary-green);
+            box-shadow: 0 0 10px var(--primary-green);
+        }
+        .status-text {
+            font-weight: bold;
+            color: var(--primary-red);
+        }
+        .status-text.online {
+            color: var(--primary-green);
+        }
+        .panel {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+        }
+        .panel-title {
+            font-size: 0.85rem;
+            color: var(--accent-orange);
+            margin-top: 0;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+        }
+        .form-group select, .form-group input {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: #ffffff;
+            font-size: 1rem;
+            box-sizing: border-box;
+            outline: none;
+        }
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .btn-start { background-color: var(--primary-green); color: #fff; }
+        .btn-stop { background-color: var(--primary-red); color: #fff; margin-top: 10px; }
+        .metrics-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.95rem;
+        }
+        .metric-label { color: var(--text-muted); }
+        .metric-value { font-weight: bold; color: #ffffff; }
+        .metric-value.positive { color: var(--primary-green); }
+        .console {
+            background-color: #05070a;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 12px;
+            height: 160px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 0.8rem;
+            color: var(--primary-green);
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <div class="header">
+        <h1>VAGGERTRADE ENGINE</h1>
+        <div class="status-container">
+            <div class="status-dot" id="statusDot"></div>
+            <span class="status-text" id="statusText">Offline</span>
+        </div>
+    </div>
+
+    <div class="panel">
+        <h2 class="panel-title">Premium Bot Parameters</h2>
+        <div class="form-group">
+            <label>Target Execution Engine</label>
+            <select id="engineType">
+                <option value="martingale">Vaggertrade AI Scalper (Martingale Loop)</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Initial Stake Amount ($)</label>
+            <input type="number" id="initialStake" value="2">
+        </div>
+        <div class="form-group">
+            <label>Maximum Stake Risk Cap ($)</label>
+            <input type="number" id="riskCap" value="5000">
+        </div>
+        <div class="form-group">
+            <label>Take Profit Target ($)</label>
+            <input type="number" id="takeProfit" value="10">
+        </div>
+        <button class="btn btn-start" id="btnStart">ACTIVATE PREMIUM SCRIPT</button>
+        <button class="btn btn-stop" id="btnStop">EMERGENCY DISCONNECT</button>
+    </div>
+
+    <div class="panel">
+        <h2 class="panel-title">Live System Metrics</h2>
+        <div class="metrics-grid">
+            <div class="metric-row">
+                <span class="metric-label">Account Balance:</span>
+                <span class="metric-value" id="uiBalance">$20,375.81</span>
+            </div>
+            <div class="metric-row">
+                <span class="metric-label">Active Working Stake:</span>
+                <span class="metric-value" id="uiStake">$0.00</span>
+            </div>
+            <div class="metric-row">
+                <span class="metric-label">Net Profit / Loss Session:</span>
+                <span class="metric-value positive" id="uiProfit">$0.00</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel">
+        <h2 class="panel-title">Live Stream Activity Log</h2>
+        <div class="console" id="consoleLog">
+            Waiting for engine validation parameters...
+        </div>
+    </div>
+
+</div>
+
+<script>
+    let isRunning = true; 
+    let baseBalance = 20375.81; 
+    let sessionProfit = 0.00;
+    let engineInterval;
+
+    let initialStake = 2.00;
+    let currentStake = 2.00;
+    let targetTakeProfit = 10.00;
+
+    const statusDot = document.getElementById('statusDot');
+    const statusText = document.getElementById('statusText');
+    const consoleLog = document.getElementById('consoleLog');
+    const uiBalance = document.getElementById('uiBalance');
+    const uiStake = document.getElementById('uiStake');
+    const uiProfit = document.getElementById('uiProfit');
+    const btnStart = document.getElementById('btnStart');
+    const btnStop = document.getElementById('btnStop');
+    const initialStakeInput = document.getElementById('initialStake');
+    const takeProfitInput = document.getElementById('takeProfit');
+
+    function runTradingEngine() {
+        initialStake = parseFloat(initialStakeInput.value) || 2.00;
+        targetTakeProfit = parseFloat(takeProfitInput.value) || 10.00;
+        currentStake = initialStake;
+
+        if (statusDot) { statusDot.className = 'status-dot online'; }
+        if (statusText) {
+            statusText.className = 'status-text online';
+            statusText.innerText = 'Online';
+        }
+        
+        if (consoleLog) { consoleLog.innerHTML = "Initializing activation sequence...<br>[OK] WebSocket connection open.<br>[OK] Remote script verified."; }
+
+        engineInterval = setInterval(() => {
+            if (!isRunning) return;
+
+            if (uiStake) uiStake.innerText = "$" + currentStake.toFixed(2);
+            const isWin = Math.random() > 0.42; 
+
+            if (isWin) {
+                const profitMade = parseFloat((currentStake * 0.95).toFixed(2));
+                sessionProfit += profitMade;
+                if (consoleLog) consoleLog.innerHTML += "<br><span style='color:var(--primary-green);'>[WIN] Target contract won. Payout: +$" + profitMade.toFixed(2) + "</span>";
+                currentStake = initialStake; 
+            } else {
+                sessionProfit -= currentStake;
+                if (consoleLog) consoleLog.innerHTML += "<br><span style='color:var(--primary-red);'>[LOSS] Contract expired out-of-the-money. Net: -$" + currentStake.toFixed(2) + "</span>";
+                currentStake = currentStake * 2; 
+                if (consoleLog) consoleLog.innerHTML += "<br>[MARTINGALE] Adjusting next contract multiplier factor to: $" + currentStake.toFixed(2);
+            }
+            
+            const totalUpdatedBalance = baseBalance + sessionProfit;
+            if (uiProfit) uiProfit.innerText = (sessionProfit >= 0 ? "+" : "") + "$" + sessionProfit.toFixed(2);
+            if (uiBalance) uiBalance.innerText = "$" + totalUpdatedBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+            if (sessionProfit >= targetTakeProfit) {
+                isRunning = false;
+                clearInterval(engineInterval);
+                if (statusDot) statusDot.className = 'status-dot';
+                if (statusText) {
+                    statusText.className = 'status-text';
+                    statusText.innerText = 'Offline';
+                }
+                if (uiStake) uiStake.innerText = "$0.00";
+  
