@@ -1,212 +1,113 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vaggertrade Engine Premium Hub</title>
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background-color: #0b0c10; color: #fff; padding: 15px; }
-        .header { display: flex; justify-content: space-between; align-items: center; background: #1f2833; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #45f3ff; }
-        .logo { font-weight: bold; font-size: 20px; color: #45f3ff; letter-spacing: 1px; }
-        .status-container { display: flex; align-items: center; gap: 8px; }
-        .dot { width: 10px; height: 10px; border-radius: 50%; background: #ff4444; }
-        
-        .grid-container { display: grid; grid-template-columns: 1fr; gap: 15px; }
-        @media(min-width: 768px) { .grid-container { grid-template-columns: 1fr 1fr; } }
-        
-        .card { background: #161a22; padding: 20px; border-radius: 8px; border: 1px solid #242936; margin-bottom: 15px; }
-        .card h3 { margin-bottom: 15px; color: #c5a880; font-size: 16px; letter-spacing: 0.5px; }
-        
-        .metric-row { display: flex; justify-content: space-between; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #242936; }
-        .metric-value { font-weight: bold; color: #00ff88; }
-        
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; color: #8b949e; font-size: 13px; margin-bottom: 5px; }
-        .form-group input, .form-group select { width: 100%; background: #0b0c10; border: 1px solid #242936; padding: 10px; color: #fff; border-radius: 6px; outline: none; }
-        .form-group input:focus { border-color: #45f3ff; }
-        
-        .btn { width: 100%; padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-bottom: 10px; font-size: 14px; }
-        .btn-start { background: linear-gradient(135deg, #00ff88, #00b359); color: #000; }
-        .btn-stop { background: #ff4444; color: #fff; }
-        
-        .console { background: #000; font-family: 'Courier New', Courier, monospace; font-size: 12px; color: #00ff88; padding: 15px; border-radius: 6px; height: 180px; overflow-y: auto; white-space: pre-line; border: 1px solid #242936; margin-bottom: 15px; }
-        
-        .history-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; text-align: left; }
-        .history-table th { background: #1f2833; color: #45f3ff; padding: 10px; border: 1px solid #242936; }
-        .history-table td { padding: 8px 10px; border: 1px solid #242936; background: #0b0c10; }
-        .win-row { color: #00ff88; }
-        .loss-row { color: #ff4444; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Apex Bot | Deriv Trading Dashboard</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-
-    <div class="header">
-        <div class="logo">VAGGERTRADE ENGINE</div>
-        <div class="status-container">
-            <div id="statusDot" class="dot"></div>
-            <span id="statusText" style="color: #8b949e; font-size: 14px;">Offline</span>
-        </div>
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">A</div>
+      <div>
+        <h1>Apex Bot</h1>
+        <p>Automated Deriv Trading Dashboard</p>
+      </div>
     </div>
-
-    <div class="grid-container">
-        <div class="card">
-            <h3>PREMIUM BOT PARAMETERS</h3>
-            <div class="form-group">
-                <label>Target Execution Engine</label>
-                <select id="strategyDropdown">
-                    <option value="Martingale">Vaggertrade AI Scalper (Martingale Loop)</option>
-                    <option value="Flat">Quantum Core (Fixed Risk Mode)</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Initial Stake Amount ($)</label>
-                <input type="number" id="initialStake" value="2">
-            </div>
-            <div class="form-group">
-                <label>Maximum Stake Risk Cap ($)</label>
-                <input type="number" id="maxStake" value="5000">
-            </div>
-            <div class="form-group">
-                <label>Take Profit Target ($)</label>
-                <input type="number" id="takeProfit" value="10">
-            </div>
-            
-            <button id="startBtn" onclick="startBot()" class="btn btn-start">ACTIVATE PREMIUM SCRIPT</button>
-            <button id="stopBtn" onclick="stopBot()" class="btn btn-stop">EMERGENCY DISCONNECT</button>
-        </div>
-
-        <div class="card">
-            <h3>LIVE SYSTEM METRICS</h3>
-            <div class="metric-row">
-                <span>Account Balance:</span>
-                <span id="balance" class="metric-value" style="color: #fff;">$20,375.81</span>
-            </div>
-            <div class="metric-row">
-                <span>Active Working Stake:</span>
-                <span id="stake" class="metric-value" style="color: #45f3ff;">$0.00</span>
-            </div>
-            <div class="metric-row">
-                <span>Net Profit / Loss Session:</span>
-                <span id="profit" class="metric-value">$0.00</span>
-            </div>
-            
-            <h3>LIVE STREAM ACTIVITY LOG</h3>
-            <div id="log" class="console">Waiting for engine validation parameters...</div>
-        </div>
+    <div class="connection">
+      <span id="statusDot" class="status-dot"></span>
+      <span id="statusText">Connecting...</span>
     </div>
+  </header>
 
-    <div class="card" style="width: 100%;">
-        <h3>TRANSACTION HISTORY LEDGER</h3>
-        <div style="max-height: 200px; overflow-y: auto;">
-            <table class="history-table">
-                <thead>
-                    <tr>
-                        <th>Time Index</th>
-                        <th>Strategy Mode</th>
-                        <th>Target Venture Risk</th>
-                        <th>Contract Verdict</th>
-                        <th>Running Balance</th>
-                    </tr>
-                </thead>
-                <tbody id="historyBody">
-                    <tr>
-                        <td colspan="5" style="text-align: center; color: #8b949e;">No transaction entries logged yet.</td>
-                    </tr>
-                </tbody>
-            </table>
+  <main class="container">
+    <section class="stats-grid">
+      <div class="card stat-card">
+        <span class="label">Balance</span>
+        <strong id="balance">$0.00</strong>
+        <small>Account balance</small>
+      </div>
+      <div class="card stat-card">
+        <span class="label">Current Stake</span>
+        <strong id="currentStake">$1.00</strong>
+        <small>Martingale stake</small>
+      </div>
+      <div class="card stat-card">
+        <span class="label">Profit / Loss</span>
+        <strong id="profitLoss">$0.00</strong>
+        <small>Session result</small>
+      </div>
+      <div class="card stat-card">
+        <span class="label">Active Trade</span>
+        <strong id="activeTrade">None</strong>
+        <small id="tradeStatus">Waiting</small>
+      </div>
+    </section>
+
+    <section class="dashboard-grid">
+      <div class="card controls-card">
+        <div class="card-header">
+          <div>
+            <h2>Bot Controls</h2>
+            <p>Configure your trading parameters</p>
+          </div>
         </div>
-    </div>
 
-    <script>
-        let simInterval;
-        let isRunning = false;
-        let currentStake = 2;
-        let initialStakeSetting = 2;
-        let maxStakeSetting = 5000;
-        let takeProfitSetting = 10;
-        let totalProfit = 0.00;
-        let baseBalance = 20375.81;
-        let transactionCount = 0;
+        <div class="form-grid">
+          <label>
+            Initial Stake
+            <input id="initialStake" type="number" min="0.35" step="0.01" value="1">
+          </label>
+          <label>
+            Maximum Stake
+            <input id="maxStake" type="number" min="0.35" step="0.01" value="32">
+          </label>
+          <label>
+            Take Profit
+            <input id="takeProfit" type="number" min="0" step="0.01" value="100">
+          </label>
+        </div>
 
-        function updateLog(message) {
-            const logBox = document.getElementById('log');
-            if (logBox) {
-                logBox.innerText += "\n" + message;
-                logBox.scrollTop = logBox.scrollHeight;
-            }
-        }
+        <div class="strategy-box">
+          <strong>Strategy</strong>
+          <p>Volatility 100 Index · 1-tick Rise · Even last digit trigger · Martingale after losses</p>
+        </div>
 
-        function addRowToLedger(strategy, stakeAmount, verdict, isWin) {
-            const body = document.getElementById('historyBody');
-            if (transactionCount === 0) body.innerHTML = "";
-            
-            transactionCount++;
-            const now = new Date();
-            const timeString = now.toTimeString().split(' ')[0];
-            const currentBal = baseBalance + totalProfit;
-            
-            const rowHTML = `
-                <tr class="${isWin ? 'win-row' : 'loss-row'}">
-                    <td>${timeString}</td>
-                    <td>${strategy}</td>
-                    <td>$${stakeAmount.toFixed(2)}</td>
-                    <td>${verdict}</td>
-                    <td style="color: white;">$${currentBal.toFixed(2)}</td>
-                </tr>
-            `;
-            body.innerHTML = rowHTML + body.innerHTML;
-        }
+        <div class="button-row">
+          <button id="startBot" class="btn btn-primary">Start Bot</button>
+          <button id="stopBot" class="btn btn-secondary" disabled>Stop Bot</button>
+        </div>
+      </div>
 
-        function updateUI() {
-            if (document.getElementById('profit')) {
-                document.getElementById('profit').innerText = `${totalProfit >= 0 ? '+' : ''}$${totalProfit.toFixed(2)}`;
-                document.getElementById('profit').style.color = totalProfit >= 0 ? "#00ff88" : "#ff4444";
-            }
-            if (document.getElementById('balance')) {
-                let currentBal = baseBalance + totalProfit;
-                document.getElementById('balance').innerText = `$${currentBal.toFixed(2)}`;
-            }
-            if (document.getElementById('stake')) {
-                document.getElementById('stake').innerText = `$${currentStake.toFixed(2)}`;
-            }
-        }
+      <div class="card activity-card">
+        <div class="card-header">
+          <div>
+            <h2>Live Activity</h2>
+            <p>Bot events and trading status</p>
+          </div>
+          <button id="clearLog" class="clear-btn">Clear</button>
+        </div>
 
-        function handleContractResult(isWin) {
-            const strategyMode = document.getElementById('strategyDropdown').value;
-            const payoutFactor = 0.95;
-            const oldStake = currentStake;
+        <div id="activityLog" class="activity-log">
+          <div class="log-entry">
+            <span class="log-time">--:--:--</span>
+            <span>Waiting for backend connection...</span>
+          </div>
+        </div>
+      </div>
+    </section>
 
-            if (isWin) {
-                const winAmount = currentStake * payoutFactor;
-                totalProfit += winAmount;
-                updateLog(`🎉 [WIN] Sequence matched. Return: +$${winAmount.toFixed(2)}`);
-                addRowToLedger(strategyMode, oldStake, `WIN (+$${winAmount.toFixed(2)})`, true);
-                currentStake = initialStakeSetting;
-            } else {
-                totalProfit -= currentStake;
-                updateLog(`❌ [LOSS] Sequence missed. Deficit: -$${currentStake.toFixed(2)}`);
-                addRowToLedger(strategyMode, oldStake, `LOSS (-$${oldStake.toFixed(2)})`, false);
-                
-                if (strategyMode === 'Martingale') {
-                    const doubleStake = currentStake * 2;
-                    if (doubleStake <= maxStakeSetting) {
-                        currentStake = doubleStake;
-                        updateLog(`🔄 Martingale: Doubling allocation to $${currentStake.toFixed(2)}`);
-                    } else {
-                        updateLog(`⚠️ Max risk parameters reached. Safety reset executed.`);
-                        currentStake = initialStakeSetting;
-                    }
-                } else {
-                    currentStake = initialStakeSetting;
-                }
-            }
-            updateUI();
+    <section class="card info-card">
+      <h2>Risk Notice</h2>
+      <p>Automated trading and Martingale strategies can result in rapid losses. Test with a demo account first, keep a strict maximum stake, and never trade money you cannot afford to lose.</p>
+    </section>
+  </main>
 
-            if (totalProfit >= takeProfitSetting) {
-                updateLog(`🏁 [TARGET MET] Take profit boundary reached. Bot loop stopped.`);
-                stopBot();
-            }
-        }
+  <footer>
+    <p>Apex Bot · Deriv Trading Dashboard</p>
+  </footer>
 
-  
+  <script src="app.js"></script>
+</body>
+</html>
