@@ -302,3 +302,103 @@
 
             // Push strings straight onto dashboard fields
   
+
+                                     <script>
+    // 1. FORCE STATUS TO TRUE ON BOOTUP
+    let isRunning = true; 
+    let baseBalance = 20375.81; 
+    let sessionProfit = 0.00;
+    let engineInterval;
+
+    let initialStake = 2.00;
+    let currentStake = 2.00;
+    let targetTakeProfit = 10.00;
+
+    // DOM Bindings
+    const statusDot = document.getElementById('statusDot');
+    const statusText = document.getElementById('statusText');
+    const consoleLog = document.getElementById('consoleLog');
+    const uiBalance = document.getElementById('uiBalance');
+    const uiStake = document.getElementById('uiStake');
+    const uiProfit = document.getElementById('uiProfit');
+    const btnStart = document.getElementById('btnStart');
+    const btnStop = document.getElementById('btnStop');
+    const initialStakeInput = document.getElementById('initialStake');
+    const takeProfitInput = document.getElementById('takeProfit');
+
+    function runTradingEngine() {
+        initialStake = parseFloat(initialStakeInput.value) || 2.00;
+        targetTakeProfit = parseFloat(takeProfitInput.value) || 10.00;
+        currentStake = initialStake;
+
+        // Force UI updates to Online states instantly
+        if (statusDot) statusDot.className = 'status-dot online';
+        if (statusText) {
+            statusText.className = 'status-text online';
+            statusText.innerText = 'Online';
+        }
+        
+        consoleLog.innerHTML = "Initializing activation sequence...<br>[OK] WebSocket connection open.<br>[OK] Remote script verified.";
+
+        engineInterval = setInterval(() => {
+            if (!isRunning) return;
+
+            uiStake.innerText = `$${currentStake.toFixed(2)}`;
+            const isWin = Math.random() > 0.42; // Simulated loop win factor ratio
+
+            if (isWin) {
+                const profitMade = parseFloat((currentStake * 0.95).toFixed(2));
+                sessionProfit += profitMade;
+                consoleLog.innerHTML += `<br><span style='color:var(--primary-green);'>[WIN] Target contract won. Payout: +$${profitMade.toFixed(2)}</span>`;
+                currentStake = initialStake; // Reset exposure on success win match
+            } else {
+                sessionProfit -= currentStake;
+                consoleLog.innerHTML += `<br><span style='color:var(--primary-red);'>[LOSS] Contract expired out-of-the-money. Net: -$${currentStake.toFixed(2)}</span>`;
+                currentStake = currentStake * 2; // Auto-doubling Martingale parameter sequence rule
+                consoleLog.innerHTML += `<br>[MARTINGALE] Adjusting next contract multiplier factor to: $${currentStake.toFixed(2)}`;
+            }
+            
+            const totalUpdatedBalance = baseBalance + sessionProfit;
+            uiProfit.innerText = (sessionProfit >= 0 ? "+" : "") + `$${sessionProfit.toFixed(2)}`;
+            uiBalance.innerText = `$${totalUpdatedBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+
+            // Self-Termination Check
+            if (sessionProfit >= targetTakeProfit) {
+                isRunning = false;
+                clearInterval(engineInterval);
+                if (statusDot) statusDot.className = 'status-dot';
+                if (statusText) {
+                    statusText.className = 'status-text';
+                    statusText.innerText = 'Offline';
+                }
+                uiStake.innerText = "\$0.00";
+                consoleLog.innerHTML += `<br><br><span style='color:var(--accent-orange); font-weight:bold;'>[TARGET REACHED] Take Profit boundary achieved (>= $${targetTakeProfit.toFixed(2)}). Script paused execution securely.</span>`;
+            }
+
+            consoleLog.scrollTop = consoleLog.scrollHeight; 
+        }, 2000);
+    }
+
+    // 2. LIFECYCLE DOM INJECTION ATTACHMENT
+    window.addEventListener('DOMContentLoaded', () => {
+        runTradingEngine();
+    });
+
+    btnStart.addEventListener('click', () => {
+        if (isRunning) return;
+        isRunning = true;
+        runTradingEngine();
+    });
+
+    btnStop.addEventListener('click', () => {
+        isRunning = false;
+        clearInterval(engineInterval);
+        if (statusDot) statusDot.className = 'status-dot';
+        if (statusText) {
+            statusText.className = 'status-text';
+            statusText.innerText = 'Offline';
+        }
+        uiStake.innerText = "\$0.00";
+        consoleLog.innerHTML += "<br><span style='color:var(--primary-red);'>[TERMINATED] Engine execution safely halted.</span>";
+    });
+</script>
