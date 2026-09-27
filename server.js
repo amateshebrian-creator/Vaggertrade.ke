@@ -1,0 +1,90 @@
+'use strict';
+
+const express = require('express');
+const axios = require('axios');
+const cors = require('cors');
+const WebSocket = require('ws');
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+const PORT = process.env.PORT || 3000;
+
+// 🟢 SAFARICOM DARAJA API GATEWAY CREDENTIALS MATRIX
+// Replace these placeholders with your actual developer keys when migrating to live production
+const MPESA_CONSUMER_KEY = process.env.MPESA_CONSUMER_KEY || "AIzaSyBP-24ExkeQt1vrjzqwlbq5meK5AD80Qfw";
+const MPESA_CONSUMER_SECRET = process.env.MPESA_CONSUMER_SECRET || "PASTE_YOUR_SECRET_HERE";
+const MPESA_SHORTCODE = process.env.MPESA_SHORTCODE || "174379"; // Safaricom test Paybill number
+const MPESA_PASSKEY = process.env.MPESA_PASSKEY || "bfb272ea231d23714b6563608497763619c68de1b2e4f0a7ef3d5567b6b19a7e";
+
+// Token Authorization Middleware for Daraja Handshakes
+async function generateMpesaToken(req, res, next) {
+    const authBuffer = Buffer.from(`${MPESA_CONSUMER_KEY}:${MPESA_CONSUMER_SECRET}`).toString('base64');
+    try {
+        const response = await axios.get('https://safaricom.co.ke', {
+            headers: { Authorization: `Basic ${authBuffer}` }
+        });
+        req.mpesaToken = response.data.access_token;
+        next();
+    } catch (error) {
+        console.error("Daraja Security Authentication Token Generation Failed.");
+        res.status(500).json({ error: "Failed to authenticate Daraja handshake credentials tokens safely." });
+    }
+}
+
+/**
+ * ⚡ INSTANT M-PESA STK PUSH PIN PROMPT CONTROLLER
+ * This endpoint triggers the automatic phone overlay menu forcing users to input their PIN
+ */
+app.post('/api/mpesa/stkpush', generateMpesaToken, async (req, res) => {
+    let { phone, amount } = req.body;
+
+    // Clean format normalization to Kenyan country indicator codes: 254...
+    if (phone.startsWith('0')) phone = '254' + phone.slice(1);
+    if (phone.startsWith('+')) phone = phone.slice(1);
+
+    const totalAmountKes = Math.round(amount * 130); // 1 USD = ~130 KES multiplier conversion mapping
+    const timestamp = new Date().toISOString().replace(/[^0-9]/g, '').slice(0, 14);
+    const password = Buffer.from(`${MPESA_SHORTCODE}${MPESA_PASSKEY}${timestamp}`).toString('base64');
+
+    const stkPayload = {
+        BusinessShortCode: MPESA_SHORTCODE,
+        Password: password,
+        Timestamp: timestamp,
+        TransactionType: "CustomerPayBillOnline", 
+        Amount: totalAmountKes,
+        PartyA: phone,
+        PartyB: MPESA_SHORTCODE,
+        PhoneNumber: phone,
+        CallBackURL: "https://onrender.com", // Points to your active backend server
+        AccountReference: "Vaggertrade",
+        TransactionDesc: "Wallet Automation Deposit Funding"
+    };
+
+    try {
+        // 🟢 FIXED ENDPOINT: Changes from /query to /processrequest to force the instant popup window
+        const safaricomResponse = await axios.post(
+            'https://safaricom.co.ke',
+            stkPayload,
+            { headers: { Authorization: `Bearer ${req.mpesaToken}` } }
+        );
+        
+        console.log("STK Push Request successfully dispatched to phone network lines.");
+        res.status(200).json(safaricomResponse.data);
+    } catch (err) {
+        console.error("Safaricom Daraja API returned a processing error flag.");
+        res.status(400).json(err.response ? err.response.data : { error: "Gateway router interface timed out." });
+    }
+});
+
+// Callback receiver webhook loop
+app.post('/api/mpesa/callback', (req, res) => {
+    console.log("Inbound cashier push confirmation parsed cleanly from Safaricom networks.");
+    res.status(200).json({ ResultCode: 0, ResultDesc: "Accepted" });
+});
+
+app.listen(PORT, () => {
+    console.log(`Vaggertrade Engine live checkout backend listening on port: ${PORT}`);
+});
+  
